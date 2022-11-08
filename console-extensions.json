@@ -14,7 +14,22 @@
       "name": "Plugin Example",
       "href": "/example",
       "perspective": "admin",
-      "section": "home"
+      "section": "workloads"
+    }
+  },
+  {
+    "type": "console.navigation/resource-ns",
+    "properties": {
+      "perspective": "admin",
+      "section": "workloads",
+      "id": "sealedsecrets",
+      "insertAfter": "secrets",
+      "name": "Sealed Secrets",
+      "model": {
+        "group": "bitnami.com",
+        "version": "v1alpha1",
+        "kind": "SealedSecret"
+      }
     }
   }
 ]
