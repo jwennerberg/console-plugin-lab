@@ -1,0 +1,13 @@
+FROM registry.access.redhat.com/ubi8/nodejs-16:1 AS builder
+
+ADD . $HOME
+
+RUN npm install corepack && yarn install && yarn build
+
+FROM registry.access.redhat.com/ubi8/nginx-120:1
+
+USER 1001
+
+COPY --from=builder $HOME/dist /usr/share/nginx/html
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
