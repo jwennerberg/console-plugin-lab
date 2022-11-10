@@ -49,12 +49,12 @@
     "webpack-dev-server": "^4.7.4"
   },
   "consolePlugin": {
-    "name": "console-plugin-lab",
-    "version": "0.0.2",
-    "displayName": "OpenShift Console Plugin lab",
-    "description": "Lab using OpenShift console plugins.",
+    "name": "custom-resource-plugin",
+    "version": "0.0.1",
+    "displayName": "Custom Resource Plugin",
+    "description": "Adds specific Custom Resource shortcuts in the OpenShift console.",
     "exposedModules": {
-      "ExamplePage": "./components/ExamplePage"
+      "CustomResources": "./components/CustomResources"
     },
     "dependencies": {
       "@console/pluginAPI": "*"

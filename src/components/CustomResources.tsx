@@ -7,9 +7,9 @@ import {
   TextContent,
   Title,
 } from '@patternfly/react-core';
-import './example.css';
+import './customresources.css';
 
-export default function ExamplePage() {
+export default function CustomResources() {
   return (
     <>
       <Helmet>

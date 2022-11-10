@@ -1,9 +1,9 @@
 ---
 plugin:
-  name: "console-plugin-lab"
-  description: "lab openshift console plugin"
-  image: "quay.io/jwennerberg/lab-console-plugin:ubi"
-  imagePullPolicy: Always
+  name: "custom-resource-plugin"
+  description: ""
+  image: "quay.io/jwennerberg/custom-resource-plugin:latest"
+  imagePullPolicy: IfNotPresent
   replicas: 2
   port: 9443
   securityContext:
