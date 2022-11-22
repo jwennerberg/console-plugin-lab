@@ -2,7 +2,7 @@
 
 This project contains an example of a minimal OpenShift Console dynamic plugin.
 The plugin will customize the console with menu items for specific custom
-resources defined.
+resources defined. `SealedSecrets` is used as an example.
 
 It requires OpenShift 4.11. For an example of a plugin that works with
 OpenShift 4.10, see the `release-4.10` branch of [this repository](https://github.com/openshift/console-plugin-template/tree/release-4.10).
@@ -15,19 +15,31 @@ at runtime, adding custom pages and other extensions. They are based on
 Plugins are registered with console using the `ConsolePlugin` custom resource
 and enabled in the console operator config by a cluster administrator.
 
-## Getting started
+<img src=assets/custom-resource-sealedsecrets.png width="800" />
 
-After cloning this repo, you should update the plugin metadata such as the
-plugin name in the `consolePlugin` declaration of [package.json](package.json).
+## How a minimal plugin is created
+
+This repo was created by forking the [openshift/console-plugin-template](https://github.com/openshift/console-plugin-template) repo.
+
+With a template in place, three parts were modified:
+
+- [package.json](package.json): plugin metadata
+- [console-extensions.json](console-extensions.json): extensions used by the plugin (navigation etc)
+- [src/components/\*.{tsx,css}](src/components): the React component for custom UI's
+
+
+#### package.json
+
+Plugin metadata like name and version in the `consolePlugin` section.
 
 ```json
 "consolePlugin": {
-  "name": "my-plugin",
+  "name": "custom-resource-plugin",
   "version": "0.0.1",
-  "displayName": "My Plugin",
-  "description": "Enjoy this shiny, new console plugin!",
+  "displayName": "Custom Resource Plugin",
+  "description": "Adds specific Custom Resource shortcuts in the OpenShift console.",
   "exposedModules": {
-    "ExamplePage": "./components/ExamplePage"
+    "CustomResources": "./components/CustomResources"
   },
   "dependencies": {
     "@console/pluginAPI": "*"
@@ -35,40 +47,67 @@ plugin name in the `consolePlugin` declaration of [package.json](package.json).
 }
 ```
 
-The template adds a single example page in the Home navigation section. The
-extension is declared in the [console-extensions.json](console-extensions.json)
-file and the React component is declared in
-[src/components/ExamplePage.tsx](src/components/ExamplePage.tsx).
+#### console-extensions.json
 
-You can run the plugin using a local development environment or build an image
-to deploy it to a cluster.
+In `console-extensions.json` you can add extensions that allow you to customize your plugin. Those extensions are then loaded to the console at run-time.
 
-## Docker image
+This minimal plugin uses the `console.navigation/resource-ns` extension to add a specific namespaced resource as a navigation item.
+
+The OpenShift documentation has a good reference of the [extension types](https://docs.openshift.com/container-platform/4.11/web_console/dynamic-plug-ins.html#dynamic-plug-in-sdk-extensions_dynamic-plugins) currently available.
+
+```json
+[
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/customresources",
+      "component": { "$codeRef": "CustomResources" }
+    }
+  },
+  {
+    "type": "console.navigation/resource-ns",
+    "properties": {
+      "perspective": "admin",
+      "section": "workloads",
+      "id": "sealedsecrets",
+      "insertAfter": "secrets",
+      "name": "SealedSecrets",
+      "model": {
+        "group": "bitnami.com",
+        "version": "v1alpha1",
+        "kind": "SealedSecret"
+      }
+    }
+  }
+]
+```
+
+#### React component
+
+The third part is the React component(s) for creating custom UI content.
+
+See [src/components/](src/components) for an example from the template.
+
+
+
+## Build container image
 
 Before you can deploy your plugin on a cluster, you must build an image and
-push it to an image registry.
+push it to an image registry. This repository contains a sample [Containerfile](Dockerfile.ubi)
+based on Red Hat UBI.
 
 1. Build the image:
 
    ```sh
-   docker build -t quay.io/my-repositroy/my-plugin:latest .
+   podman build -f Dockerfile.ubi -t quay.io/my-repositroy/custom-resource-plugin:latest .
    ```
 
-2. Run the image:
+2. Push the image:
 
    ```sh
-   docker run -it --rm -d -p 9001:80 quay.io/my-repository/my-plugin:latest
+   podman push quay.io/my-repository/custom-resource-plugin:latest
    ```
-
-3. Push the image:
-
-   ```sh
-   docker push quay.io/my-repository/my-plugin:latest
-   ```
-
-NOTE: If you have a Mac with Apple silicon, you will need to add the flag
-`--platform=linux/amd64` when building the image to target the correct platform
-to run in-cluster.
 
 ## Deployment on cluster
 
@@ -84,11 +123,12 @@ Additional parameters can be specified if desired. Consult the chart [values](ch
 
 Install the chart using the name of the plugin as the Helm release name into a new namespace or an existing namespace as specified by the `my-plugin-namespace` parameter and providing the location of the image within the `plugin.image` parameter by using the following command:
 
-```shell
-helm upgrade -i  my-plugin charts/openshift-console-plugin -n my-plugin-namespace --create-namespace --set plugin.image=my-plugin-image-location
+```sh
+helm upgrade -i custom-resource-plugin charts/openshift-console-plugin -n my-plugin-namespace --create-namespace --set plugin.image=quay.io/my-repository/custom-resource-plugin:latest
 ```
 
-NOTE: When deploying on OpenShift 4.10, it is recommended to add the parameter `--set plugin.securityContext.enabled=false` which will omit configurations related to Pod Security.
+Plugin deployed in OpenShift:
+<img src="assets/ocp-dynamic-plugins.png" alt="Plugin deployed in OpenShift" width="800" />
 
 ## References
 
